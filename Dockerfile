@@ -1,61 +1,27 @@
-FROM jrottenberg/ffmpeg:centos
+# Use a modern, maintained FFmpeg image based on Ubuntu
+FROM jrottenberg/ffmpeg:6.1-ubuntu2204
 
-MAINTAINER Paul Visco <paul.visco@gmail.com>
+LABEL maintainer="Paul Visco <paul.visco@gmail.com>"
 
-#####################################################################
-#
-# A Docker image to convert audio and video for web using web API
-#
-#   with
-#     - Latest FFMPEG (built)
-#     - NodeJS
-#     - fluent-ffmpeg
-#
-#   For more on Fluent-FFMPEG, see 
-#
-#            https://github.com/fluent-ffmpeg/node-fluent-ffmpeg
-#
-#####################################################################
+# Install Node.js, npm, and git
+RUN apt-get update && \
+    apt-get install -y curl git && \
+    curl -fsSL https://deb.nodesource.com/setup_20.x | bash - && \
+    apt-get install -y nodejs && \
+    rm -rf /var/lib/apt/lists/*
 
-# Add the following two dependencies for nodejs
-RUN yum install -y git
-RUN yum install -y https://dl.fedoraproject.org/pub/epel/epel-release-latest-7.noarch.rpm
-RUN yum install -y nodejs npm --enablerepo=epel
-
-WORKDIR /usr/local/src
-
-# Custom Builds go here
-RUN npm install -g fluent-ffmpeg
-
-# Remove all tmpfile and cleanup
-# =================================
-WORKDIR /usr/local/
-RUN rm -rf /usr/local/src
-RUN yum clean all
-RUN rm -rf /var/cache/yum
-
-# =================================
-
-# Setup a working directory to allow for
-# docker run --rm -ti -v ${PWD}:/work ...
-# =======================================
-WORKDIR /work
-
-# Make sure Node.js is installed
-RUN           node -v
-RUN           npm -v
-
-#Create app dir
-RUN mkdir -p /usr/src/app
+# Set up working directory
 WORKDIR /usr/src/app
 
-#Install Dependencies
-COPY package.json /usr/src/app
+# Install dependencies
+COPY package.json package-lock.json* ./
 RUN npm install
 
-#Bundle app source
-COPY . /usr/src/app
+# Copy the rest of the app
+COPY . .
 
+# Expose the port
 EXPOSE 3000
-ENTRYPOINT []
-CMD [ "node", "app.js" ]
+
+# Start the app
+CMD ["node", "app.js"]
