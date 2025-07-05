@@ -1,4 +1,13 @@
 exports.types = {
+     wav: {
+        extension: 'wav',
+        outputOptions: [
+            
+            '-codec:a pcm_s16le',
+            '-ar 44100',
+            '-ac 2',
+        ],
+    },
     jpg: {
         extension: 'jpg',
         outputOptions: [
